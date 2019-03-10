@@ -90,10 +90,13 @@ void queue_IDLE(TC_TM_app_id app_id) {
     pkt = queuePeak(app_id);
     if(pkt != NULL) { return; }
 
+   // DEBUG
+/*
     if(is_free_pkt(pkt) == true) {
         queuePop(app_id);
         traceGC_QUEUE_PKT();
     }
+*/
 
 }
 

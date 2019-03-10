@@ -33,16 +33,20 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 #include "cmsis_os.h"
-#include "fatfs.h"
+#include "main.h"
+//#include "fatfs.h"
 
 /* USER CODE BEGIN Includes */
+#include "obc.h"
+/*
 #include "obc.h"
 #include "service_utilities.h"
 #include "time_management_service.h"
 #include "wdg.h"
 #include "su_mnlp.h"
 #include "scheduling_service.h"
-
+*/
+#include "pkt_pool.h"
 
 #undef __FILE_ID__
 #define __FILE_ID__ 666
@@ -57,7 +61,7 @@ IWDG_HandleTypeDef hiwdg;
 RTC_HandleTypeDef hrtc;
 
 SD_HandleTypeDef hsd;
-HAL_SD_CardInfoTypedef SDCardInfo;
+// HAL_SD_CardInfoTypedef SDCardInfo;
 
 SPI_HandleTypeDef hspi1;
 SPI_HandleTypeDef hspi2;
@@ -158,8 +162,8 @@ int main(void)
   MX_IWDG_Init();
 
   /* USER CODE BEGIN 2 */
-  SEGGER_SYSVIEW_Conf();
-  sysview_init();
+  /*SEGGER_SYSVIEW_Conf();
+  sysview_init();*/
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -665,15 +669,15 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 }
 /* USER CODE END 4 */
 
-/* UART_task function */
+/* UART_task function
 void UART_task(void const * argument)
 {
-  /* init code for FATFS */
+   init code for FATFS
   MX_FATFS_Init();
 
-  /* USER CODE BEGIN 5 */
+   USER CODE BEGIN 5
   
-   /*IS25LP128  eeprom*/
+   IS25LP128  eeprom
    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_SET);
    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
 
@@ -694,7 +698,7 @@ void UART_task(void const * argument)
 
    mass_storage_init();
 
-  /*Task notification setup*/
+  Task notification setup
   uint32_t ulNotificationValue;
   const TickType_t xMaxBlockTime = pdMS_TO_TICKS(10000);
 
@@ -708,14 +712,15 @@ void UART_task(void const * argument)
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
   osDelay(1);
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-  /*Uart inits*/
+  Uart inits
+  // DEBUG
   HAL_UART_Receive_IT( &huart1, obc_data.eps_uart.uart_buf, UART_BUF_SIZE);
   HAL_UART_Receive_IT( &huart2, MNLP_data.su_inc_resp, 174);
   HAL_UART_Receive_IT( &huart3, obc_data.dbg_uart.uart_buf, UART_BUF_SIZE);
   HAL_UART_Receive_IT( &huart4, obc_data.comms_uart.uart_buf, UART_BUF_SIZE);
   HAL_UART_Receive_IT( &huart6, obc_data.adcs_uart.uart_buf, UART_BUF_SIZE);
 
-  /* Infinite loop */
+   Infinite loop
   for(;;)
   {
     task_times.uart_time = HAL_sys_GetTick();
@@ -746,15 +751,15 @@ void UART_task(void const * argument)
     ulNotificationValue = ulTaskNotifyTake( pdTRUE, blockTime);
     
   }
-  /* USER CODE END 5 */ 
-}
+   USER CODE END 5
+}*/
 
-/* HK_task function */
+/* HK_task function
 void HK_task(void const * argument)
 {
-  /* USER CODE BEGIN HK_task */
+   USER CODE BEGIN HK_task
   hk_INIT();
-  /* Infinite loop */
+   Infinite loop
   osDelay(6000);
   for(;;)
   {
@@ -762,8 +767,8 @@ void HK_task(void const * argument)
     hk_SCH();
     osDelay(10);
   }
-  /* USER CODE END HK_task */
-}
+   USER CODE END HK_task
+}*/
 
 /* IDLE_task function */
 void IDLE_task(void const * argument)
@@ -781,8 +786,8 @@ void IDLE_task(void const * argument)
     uint32_t time = HAL_sys_GetTick();
     task_times.idle_time = time;
 
-
-    pkt_pool_IDLE(time);
+    // DEBUG
+    // pkt_pool_IDLE(time);
     queue_IDLE(EPS_APP_ID);
     queue_IDLE(DBG_APP_ID);
     queue_IDLE(COMMS_APP_ID);
@@ -805,53 +810,54 @@ void IDLE_task(void const * argument)
   /* USER CODE END IDLE_task */
 }
 
-/* SU_SCH function */
+/* SU_SCH function
 void SU_SCH(void const * argument)
 {
-  /* USER CODE BEGIN su_sch_task */
+   USER CODE BEGIN su_sch_task
   uint32_t sleep_val_secs;
   su_mnlp_returnState su_sche_state = su_sche_last;
-  osDelay(5000); /*delay to hold freeRTOS scheduler executing us before mass_storage init, su_init etc...*/
+  osDelay(5000); delay to hold freeRTOS scheduler executing us before mass_storage init, su_init etc...
   
-  for (;;){ /* Infinite loop */
+  for (;;){  Infinite loop
     if( *MNLP_data.su_service_scheduler_active){
         
         sleep_val_secs = 0;
         su_sche_state = su_script_selector(&sleep_val_secs);
 
         if( su_sche_state == su_no_scr_eligible){
-            ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS((sleep_val_secs)*1000)); /*sleeps for <50 secs*/
+            ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS((sleep_val_secs)*1000)); sleeps for <50 secs
             continue;
         }
         else
-        if( su_sche_state == su_new_scr_selected){ /*script marked active 1 to 60 seconds earlier, sleep this time*/
+        if( su_sche_state == su_new_scr_selected){ script marked active 1 to 60 seconds earlier, sleep this time
             ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS((sleep_val_secs)*1000));
             continue;
         }
         else
-        if( su_sche_state == su_no_new_scr_selected){ /*so there is an already active script, old or new, go for it*/
+        if( su_sche_state == su_no_new_scr_selected){ so there is an already active script, old or new, go for it
             if( (*MNLP_data.su_nmlp_script_scheduler_active) == (uint8_t) true){
                 sleep_val_secs = 0;
                 su_sche_state = su_SCH(&sleep_val_secs);                
                 if( su_sche_state == su_sche_script_ended){
-                    /*all time tables inside su_SCH has been served. Select a new script or go for the next science collection day*/
+                    all time tables inside su_SCH has been served. Select a new script or go for the next science collection day
                    ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS((sleep_val_secs)*1000));
                    continue;
-                   /*TODO: also to be notified on script upload?*/
+                   TODO: also to be notified on script upload?
                 }
             }
         }
       }
     osDelay(2000);
   }  
-  /* USER CODE END su_sch_task */
-}
+   USER CODE END su_sch_task
+}*/
 
 /* sche_se_sch function */
+/*
 void sche_se_sch(void const * argument)
 {
-  /* USER CODE BEGIN sche_se_sch */
-  /* Infinite loop */
+   USER CODE BEGIN sche_se_sch
+   Infinite loop
     osDelay(5000);
 
   for(;;)
@@ -860,8 +866,9 @@ void sche_se_sch(void const * argument)
     cross_schedules();
     osDelay(1000);
   }
-  /* USER CODE END StartTask05 */
+   USER CODE END StartTask05
 }
+*/
 
 /**
   * @brief  Period elapsed callback in non blocking mode

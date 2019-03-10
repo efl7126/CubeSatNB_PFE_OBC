@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "housekeeping.h"
-#include "mass_storage_service.h"
+// #include "mass_storage_service.h"
 #include "wdg.h"
 #include "su_mnlp.h"
 //#include "system.h"
@@ -21,8 +21,8 @@ extern SAT_returnState free_pkt(tc_tm_pkt *pkt);
 extern SAT_returnState verification_app(tc_tm_pkt *pkt);
 extern SAT_returnState hk_app(tc_tm_pkt *pkt);
 extern SAT_returnState function_management_app(tc_tm_pkt *pkt);
-extern SAT_returnState mass_storage_app(tc_tm_pkt *pkt);
-extern SAT_returnState mass_storage_storeLogs(MS_sid sid, uint8_t *buf, uint16_t *size);
+//extern SAT_returnState mass_storage_app(tc_tm_pkt *pkt);
+//extern SAT_returnState mass_storage_storeLogs(MS_sid sid, uint8_t *buf, uint16_t *size);
 extern SAT_returnState test_app(tc_tm_pkt *pkt);
 
 
@@ -136,7 +136,7 @@ SAT_returnState obc_INIT() {
 
     HAL_obc_SD_ON();
    
-    mass_storage_init();
+    //mass_storage_init();
 
     su_INIT();
 
@@ -155,7 +155,8 @@ SAT_returnState sram_hard_delete() {
     return SATR_OK;
 }
 
-void bkup_sram_INIT() {
+// DEBUG
+/*void bkup_sram_INIT() {
 
     uint8_t *base_pointer = (uint8_t*)HAL_obc_BKPSRAM_BASE();
 
@@ -250,7 +251,7 @@ void bkup_sram_INIT() {
     if(!C_ASSERT( (*MNLP_data.su_service_scheduler_active == false ) || 
                   (*MNLP_data.su_service_scheduler_active == true) ) == true) { *MNLP_data.su_service_scheduler_active = true; }
     if(!C_ASSERT(*MNLP_data.su_nmlp_last_active_script <= SU_SCRIPT_7 ) == true) { *MNLP_data.su_nmlp_last_active_script = SU_NOSCRIPT; }
-}
+}*/
 
 SAT_returnState event_log(uint8_t *buf, const uint16_t size) {
   
@@ -298,7 +299,7 @@ SAT_returnState event_log_IDLE() {
 
         uint16_t size = EV_BUFFER_PART;
 
-        mass_storage_storeFile(EVENT_LOG, 0, &obc_data.log[*obc_data.log_state * EV_BUFFER_PART], &size);
+        //mass_storage_storeFile(EVENT_LOG, 0, &obc_data.log[*obc_data.log_state * EV_BUFFER_PART], &size);
         if(++(*obc_data.log_state) > EV_P4) { *obc_data.log_state = EV_P0; }
 
     } 
